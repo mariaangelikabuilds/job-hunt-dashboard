@@ -13,6 +13,7 @@
     Arial, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
+  --font-display: "Source Serif 4", Georgia, "Times New Roman", serif;
 
   --measure-prose: 64ch;
   --measure-wide: 80ch;
@@ -74,35 +75,36 @@ pre {
 main {
   max-width: var(--measure-wide);
   margin: 0 auto;
-  padding: 4rem 1.5rem 6rem;
+  padding: 5rem 1.5rem 6rem;
 }
 
 @media (min-width: 720px) {
   main {
-    padding: 6rem 2rem 8rem;
+    padding: 7rem 2rem 9rem;
   }
 }
 
 section + section {
-  margin-top: 4rem;
+  margin-top: 5rem;
 }
 
 h1 {
-  font-size: clamp(1.75rem, 1.1rem + 2.6vw, 2.75rem);
-  line-height: 1.15;
+  font-family: var(--font-display);
+  font-size: clamp(2.25rem, 1.4rem + 3.6vw, 4rem);
+  line-height: 1.06;
   font-weight: 600;
-  letter-spacing: -0.01em;
-  margin: 0 0 1.25rem;
-  max-width: var(--measure-prose);
+  letter-spacing: -0.02em;
+  margin: 0 0 1.75rem;
+  max-width: 22ch;
 }
 
 h2 {
-  font-size: 1.125rem;
+  font-size: 0.8125rem;
   font-weight: 600;
-  letter-spacing: 0.04em;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
   color: var(--muted);
-  margin: 0 0 1.25rem;
+  margin: 0 0 1.5rem;
 }
 
 h3 {
@@ -112,7 +114,7 @@ h3 {
 }
 
 p {
-  margin: 0 0 1rem;
+  margin: 0 0 1.125rem;
   max-width: var(--measure-prose);
 }
 
@@ -134,15 +136,28 @@ hr {
 }
 
 .lede {
-  font-size: 1.125rem;
+  font-size: clamp(1.0625rem, 0.95rem + 0.5vw, 1.25rem);
+  line-height: 1.55;
   color: var(--fg);
-  max-width: var(--measure-prose);
+  max-width: 56ch;
+}
+
+.eyebrow {
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin: 0 0 1.5rem;
 }
 
 .byline {
   color: var(--muted);
-  font-size: 0.95rem;
-  margin-bottom: 2.5rem;
+  font-size: 0.875rem;
+  letter-spacing: 0.02em;
+  margin: 4rem 0 0;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--rule);
 }
 
 .byline a {
@@ -152,73 +167,141 @@ hr {
 .stats {
   display: grid;
   grid-template-columns: 1fr;
+  gap: 1.5rem;
+}
+
+@media (min-width: 720px) {
+  .stats {
+    grid-template-columns: 1.4fr 1fr;
+    gap: 2rem;
+  }
+}
+
+.stat-hero {
+  border-top: 1px solid var(--fg);
+  padding-top: 1.25rem;
+}
+
+.stat-hero .stat-value {
+  font-family: var(--font-display);
+  font-size: clamp(4rem, 2.5rem + 6vw, 7rem);
+  font-weight: 600;
+  line-height: 0.95;
+  letter-spacing: -0.04em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+  display: block;
+}
+
+.stat-hero .stat-unit {
+  font-family: var(--font-display);
+  font-size: 0.5em;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.1em;
+  letter-spacing: -0.02em;
+}
+
+.stat-hero .stat-label {
+  font-size: 0.875rem;
+  color: var(--fg);
+  margin-top: 0.75rem;
+  font-weight: 500;
+}
+
+.stat-hero .stat-note {
+  font-size: 0.8125rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.stat-secondary {
+  display: grid;
+  grid-template-rows: auto auto;
+  gap: 1.25rem;
+  align-content: start;
+}
+
+.stat-small {
+  border-top: 1px solid var(--rule);
+  padding-top: 1rem;
+}
+
+.stat-small .stat-value {
+  font-family: var(--font-display);
+  font-size: 2.5rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  font-variant-numeric: tabular-nums;
+}
+
+.stat-small .stat-unit {
+  font-family: var(--font-display);
+  font-size: 0.6em;
+  font-weight: 400;
+  color: var(--muted);
+  margin-left: 0.05em;
+}
+
+.stat-small .stat-label {
+  font-size: 0.75rem;
+  color: var(--muted);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  margin-top: 0.5rem;
+}
+
+.stat-small .stat-note {
+  font-size: 0.75rem;
+  color: var(--muted);
+  margin-top: 0.25rem;
+}
+
+.stats-meta {
+  margin-top: 1.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.surfaces {
+  display: grid;
+  grid-template-columns: 1fr;
   gap: 1px;
   background: var(--rule);
   border: 1px solid var(--rule);
   border-radius: var(--radius);
   overflow: hidden;
+  margin-top: 1.5rem;
+  max-width: var(--measure-prose);
 }
 
 @media (min-width: 600px) {
-  .stats {
-    grid-template-columns: repeat(2, 1fr);
+  .surfaces {
+    grid-template-columns: 1fr 1fr;
   }
 }
 
-@media (min-width: 900px) {
-  .stats {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
-.stat {
+.surface {
   background: #ffffff;
-  padding: 1.25rem 1.25rem 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
+  padding: 1rem 1.1rem;
 }
 
-.stat-value {
-  font-size: 2rem;
+.surface-name {
+  font-size: 0.75rem;
   font-weight: 600;
-  line-height: 1;
-  letter-spacing: -0.01em;
-  color: var(--fg);
-  font-variant-numeric: tabular-nums;
-}
-
-.stat-unit {
-  font-size: 1rem;
-  font-weight: 500;
-  color: var(--muted);
-  margin-left: 0.25rem;
-}
-
-.stat-label {
-  font-size: 0.85rem;
-  color: var(--muted);
-  margin-top: 0.4rem;
-  letter-spacing: 0.02em;
+  letter-spacing: 0.08em;
   text-transform: uppercase;
-}
-
-.stat-note {
-  font-size: 0.8rem;
   color: var(--muted);
-  margin-top: 0.5rem;
+  margin-bottom: 0.35rem;
 }
 
-.diagram {
-  background: #ffffff;
-  border: 1px solid var(--rule);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  font-family: var(--font-mono);
-  font-size: 0.78rem;
-  line-height: 1.55;
-  overflow-x: auto;
-  white-space: pre;
+.surface-detail {
+  font-size: 0.9rem;
+  line-height: 1.45;
+  color: var(--fg);
 }
 
 .cta {
@@ -323,8 +406,7 @@ footer a {
     --warn: #d6a16a;
   }
 
-  .stat,
-  .diagram,
+  .surface,
   .note,
   .tag {
     background: #1d201f;

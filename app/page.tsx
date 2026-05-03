@@ -11,22 +11,21 @@ export default async function Page() {
   const stats = await getDashboardStats()
   const seeded = stats.source === 'seed'
 
+  const heroValue = stats.avg_fit_score == null ? 'n/a' : stats.avg_fit_score
+  const heroUnit = stats.avg_fit_score == null ? undefined : '/100'
+
   return (
     <main>
-      <p className="byline">
-        <a href="https://github.com/mariaangelikabuilds">Angel Agutaya</a>
-        {'  '}/{'  '}Product Design Engineer
-      </p>
+      <p className="eyebrow">Case study</p>
 
       <h1>
         A Google Workspace CRM for tracking my own job hunt, scored by Claude.
       </h1>
 
       <p className="lede">
-        Apps Script, Sheets, Gmail, Drive, Calendar, a sidebar, a mobile PWA, a
-        Slack slash command, and prompt caching against my master resume in a
-        Drive Doc. Built and dogfooded against my actual applications. The
-        numbers below come from real use.
+        Apps Script, Sheets, Gmail, Drive, Calendar, a sidebar, a mobile PWA,
+        and prompt caching against my master resume in a Drive Doc. Built and
+        dogfooded against my actual applications.
       </p>
 
       <div className="actions">
@@ -41,111 +40,117 @@ export default async function Page() {
         </a>
       </div>
 
-      <hr />
-
       <section aria-labelledby="numbers">
-        <h2 id="numbers">The numbers</h2>
+        <h2 id="numbers">Live numbers</h2>
         <div className="stats">
-          <Stat
-            value={stats.applications_tracked}
-            label="Applications tracked"
-          />
-          <Stat
-            value={stats.cache_hit_rate_pct}
-            unit="%"
-            label="Prompt-cache hit rate"
-            note={
-              stats.score_calls_last_30d <= 1
-                ? 'First call cold-misses, subsequent calls hit'
-                : `Across ${stats.score_calls_last_30d} score calls`
-            }
-          />
-          <Stat
-            value={stats.avg_fit_score == null ? 'n/a' : stats.avg_fit_score}
-            unit={stats.avg_fit_score == null ? undefined : '/100'}
-            label="Avg fit score"
-            note={`${stats.score_calls_last_30d} score calls, last 30d`}
-          />
+          <div className="stat-hero">
+            <div>
+              <span className="stat-value">{heroValue}</span>
+              {heroUnit ? <span className="stat-unit">{heroUnit}</span> : null}
+            </div>
+            <div className="stat-label">Average fit score</div>
+            <div className="stat-note">
+              {stats.score_calls_last_30d <= 1
+                ? `${stats.score_calls_last_30d} score call so far. Will move as more JDs run through.`
+                : `Across ${stats.score_calls_last_30d} score calls in the last 30 days.`}
+            </div>
+          </div>
+          <div className="stat-secondary">
+            <div className="stat-small">
+              <div>
+                <span className="stat-value">{stats.applications_tracked}</span>
+              </div>
+              <div className="stat-label">Applications tracked</div>
+            </div>
+            <div className="stat-small">
+              <div>
+                <span className="stat-value">{stats.cache_hit_rate_pct}</span>
+                <span className="stat-unit">%</span>
+              </div>
+              <div className="stat-label">Prompt-cache hit rate</div>
+              <div className="stat-note">
+                {stats.score_calls_last_30d <= 1
+                  ? 'First call cold-misses. Drops to ~10% of input cost on every call after.'
+                  : `Across ${stats.score_calls_last_30d} score calls.`}
+              </div>
+            </div>
+          </div>
         </div>
-        {seeded ? (
-          <p className="note" style={{ marginTop: '1.25rem' }}>
-            Live data hookup is wired but disabled until I publish the read-only
-            service-account credential. The values above are seeded placeholders
-            from my own usage so far. The latest will appear here once the cron
-            is on.
-          </p>
-        ) : (
-          <p className="note" style={{ marginTop: '1.25rem' }}>
-            Live, refreshed every hour from the Activity log of my running CRM.
-            Last refresh:{' '}
-            <span style={{ fontVariantNumeric: 'tabular-nums' }}>
-              {stats.last_refresh}
-            </span>
-            .
-          </p>
-        )}
+        <p className="stats-meta">
+          {seeded
+            ? 'Seeded placeholders. Live wiring is configured but the read is gated until I publish the credential.'
+            : `Live, refreshed hourly from the Activity log of my running CRM. Last refresh: ${stats.last_refresh}.`}
+        </p>
       </section>
 
       <section id="how-it-works" aria-labelledby="how-it-works-h">
         <h2 id="how-it-works-h">How it works</h2>
         <p>
-          Every application is a row on the <strong>Applications</strong> tab.
-          Pasting a JD and clicking <em>Score</em> in the sidebar sends the JD
-          plus my master resume to <code>claude-opus-4-7</code>, returns a 0-100
-          fit score, three opinionated cover-letter angles, red flags, and a
-          rationale. The resume body is the cache anchor: same bytes every call,
-          so the prefix cache hits at roughly 10% of full input cost on every
-          call after the first.
+          Every application is a row on the Applications tab. Pasting a JD and
+          clicking Score in the sidebar sends the JD plus my master resume to{' '}
+          <code>claude-opus-4-7</code>, which returns a 0-100 fit score, three
+          opinionated cover-letter angles, red flags, and a rationale. The
+          resume body is the cache anchor: same bytes every call, so the
+          prefix cache hits at roughly 10% of full input cost on every call
+          after the first.
         </p>
         <p>
-          Beyond scoring: a tailored resume and cover letter are generated per
-          application with anti-fabrication rules (no skills, metrics, or roles
-          not in the master). A daily nudge surfaces follow-ups stuck on{' '}
-          <em>Applied</em>. A Slack slash command lets me log a new application
-          from any channel. A vector-similarity search over past applications
+          Beyond scoring: a tailored resume and a cover letter are generated
+          per application with anti-fabrication rules (no skills, metrics, or
+          roles not in the master). A daily nudge surfaces follow-ups stuck
+          on Applied. A vector-similarity search over past applications
           surfaces lookalikes for resume reuse.
         </p>
-        <pre className="diagram" aria-hidden="true">
-{`Google Sheet                       Apps Script project
-+----------------+                 +-------------------------+
-| Applications   |  <-- writes --  | Code.gs (orchestration) |
-| Analytics      |                 | Claude.gs (API client)  |
-| Activity (log) |                 | Resume.gs (Drive cache) |
-+----------------+                 | ResumeGen + CoverLetter |
-        ^                          | InterviewPrep / Scraper |
-        |                          | Gmail / Drive / Calendar|
-        | reads/writes             | Embeddings (OpenAI)     |
-        v                          | Slack (webhook + slash) |
-+----------------+                 +-------------------------+
-| Sidebar.html   |                          |
-| MobileApp PWA  |                          v
-+----------------+                 +-------------------------+
-                                   | api.anthropic.com       |
-                                   | claude-opus-4-7         |
-                                   | adaptive thinking       |
-                                   | prompt caching enabled  |
-                                   +-------------------------+`}
-        </pre>
+        <div className="surfaces">
+          <div className="surface">
+            <div className="surface-name">Sheet</div>
+            <div className="surface-detail">
+              Three tabs: Applications, Analytics (formula-only), Activity
+              (audit log, hidden).
+            </div>
+          </div>
+          <div className="surface">
+            <div className="surface-name">Sidebar</div>
+            <div className="surface-detail">
+              In-Sheet HtmlService panel. Score, tailor, draft cover letter,
+              show diff against master.
+            </div>
+          </div>
+          <div className="surface">
+            <div className="surface-name">Mobile PWA</div>
+            <div className="surface-detail">
+              Apps Script Web App, single-user, add to home screen. One-handed
+              quick log from a recruiter call.
+            </div>
+          </div>
+          <div className="surface">
+            <div className="surface-name">Inbox + Calendar</div>
+            <div className="surface-detail">
+              Gmail label parser, daily follow-up nudge, Calendar event on
+              status flip to Interview Scheduled.
+            </div>
+          </div>
+        </div>
       </section>
 
       <section aria-labelledby="design">
-        <h2 id="design">Design choices that aren't AI-default</h2>
+        <h2 id="design">Design choices that aren&apos;t AI-default</h2>
         <p>
-          The sidebar, the mobile app, and this page all share the same visual
-          language: system font stack (no Inter, no Geist), one accent color
-          (deep teal <code>#2D5266</code>), one corner radius (4px), no
-          gradients, no stacked shadows, no emoji headers. Skeleton loading
-          instead of spinners. Empty states tell you what to do next instead of
-          saying <em>No items yet</em>.
+          The sidebar, the mobile app, and this page share the same visual
+          language: deliberate serif display type (Source Serif 4) against
+          system sans for body, one accent color (deep teal{' '}
+          <code>#2D5266</code>), one corner radius, no gradients, no stacked
+          shadows, no emoji headers. Skeleton loading instead of spinners.
+          Empty states tell you what to do next instead of saying No items
+          yet.
         </p>
         <p>
-          Every cover-letter prompt is constrained at the system level: no{' '}
-          <em>Spearheaded</em>, no <em>Synergized</em>, no <em>I am writing to
-          apply</em>, no <em>Thank you for your consideration</em>. Tailored
-          resumes refuse to invent skills or metrics not in the master; they
-          emit <code>GAP:</code> notes I review by hand. This is the part most
-          AI-generated resumes get wrong, and the part recruiters can spot at
-          thirty paces.
+          Every cover-letter prompt is constrained at the system level: no
+          Spearheaded, no Synergized, no I am writing to apply, no Thank you
+          for your consideration. Tailored resumes refuse to invent skills or
+          metrics not in the master; they emit <code>GAP:</code> notes I
+          review by hand. This is the part most AI-generated resumes get
+          wrong, and the part recruiters can spot at thirty paces.
         </p>
       </section>
 
@@ -171,26 +176,26 @@ export default async function Page() {
           <dt>Models</dt>
           <dd>
             <code>claude-opus-4-7</code> for scoring, extraction, tailoring,
-            cover letters, interview prep. <code>text-embedding-3-small</code>{' '}
-            for similarity search.
+            cover letters, interview prep.{' '}
+            <code>text-embedding-3-small</code> for similarity search.
           </dd>
           <dt>Privacy</dt>
           <dd>
-            Sheet, Drive, Activity log all in my own Google account. API key in
-            Script Properties. Public repo excludes IDs and keys.
+            Sheet, Drive, Activity log all in my own Google account. API key
+            in Script Properties. Public repo excludes IDs and keys.
           </dd>
         </dl>
       </section>
 
       <section aria-labelledby="repo">
-        <h2 id="repo">Repo and template</h2>
+        <h2 id="repo">Source</h2>
         <p>
-          Source is public at{' '}
+          Public at{' '}
           <a href="https://github.com/mariaangelikabuilds/job-hunt-crm">
             github.com/mariaangelikabuilds/job-hunt-crm
           </a>
           . Install steps, OAuth scopes, mobile and Slack deployment, and a
-          one-click <em>Make a copy</em> link for forks are in the README.
+          Make a copy link for forks are in the README.
         </p>
         <div className="actions">
           <a
@@ -202,35 +207,11 @@ export default async function Page() {
         </div>
       </section>
 
-      <footer>
-        Built by{' '}
-        <a href="https://github.com/mariaangelikabuilds">Angel Agutaya</a>.
-        Hosted on Vercel. No analytics, no cookies, no tracking scripts on this
-        page.
-      </footer>
+      <p className="byline">
+        <a href="https://github.com/mariaangelikabuilds">Angel Agutaya</a>,
+        Product Design Engineer. Hosted on Vercel. No analytics, no cookies,
+        no tracking scripts on this page.
+      </p>
     </main>
-  )
-}
-
-function Stat({
-  value,
-  unit,
-  label,
-  note,
-}: {
-  value: string | number
-  unit?: string
-  label: string
-  note?: string
-}) {
-  return (
-    <div className="stat">
-      <div>
-        <span className="stat-value">{value}</span>
-        {unit ? <span className="stat-unit">{unit}</span> : null}
-      </div>
-      <div className="stat-label">{label}</div>
-      {note ? <div className="stat-note">{note}</div> : null}
-    </div>
   )
 }
