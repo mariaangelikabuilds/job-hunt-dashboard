@@ -54,17 +54,16 @@ export default async function Page() {
             value={stats.cache_hit_rate_pct}
             unit="%"
             label="Prompt-cache hit rate"
-            note="Cache reads vs total input tokens"
+            note={
+              stats.score_calls_last_30d <= 1
+                ? 'First call cold-misses, subsequent calls hit'
+                : `Across ${stats.score_calls_last_30d} score calls`
+            }
           />
           <Stat
-            value={stats.monthly_spend_usd_str}
-            unit="USD"
-            label="Anthropic spend, last 30d"
-          />
-          <Stat
-            value={stats.avg_score_latency_seconds}
-            unit="s"
-            label="Avg scoring latency"
+            value={stats.avg_fit_score == null ? 'n/a' : stats.avg_fit_score}
+            unit={stats.avg_fit_score == null ? undefined : '/100'}
+            label="Avg fit score"
             note={`${stats.score_calls_last_30d} score calls, last 30d`}
           />
         </div>

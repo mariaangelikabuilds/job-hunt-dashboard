@@ -3,8 +3,7 @@ import { JWT } from 'google-auth-library'
 export type DashboardStats = {
   applications_tracked: number
   cache_hit_rate_pct: number
-  monthly_spend_usd_str: string
-  avg_score_latency_seconds: number
+  avg_fit_score: number | null
   score_calls_last_30d: number
   last_refresh: string
   source: 'seed' | 'sheet'
@@ -13,8 +12,7 @@ export type DashboardStats = {
 const SEED: DashboardStats = {
   applications_tracked: 0,
   cache_hit_rate_pct: 0,
-  monthly_spend_usd_str: '0.00',
-  avg_score_latency_seconds: 0,
+  avg_fit_score: null,
   score_calls_last_30d: 0,
   last_refresh: 'not yet wired',
   source: 'seed',
@@ -40,7 +38,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     await client.authorize()
 
     const ranges = [
-      'Applications!A2:A',
+      'Applications!A2:H',
       'Activity!A2:I',
     ]
     const url =
@@ -65,32 +63,35 @@ export async function getDashboardStats(): Promise<DashboardStats> {
       (r) => r[0] !== '' && r[0] != null,
     ).length
 
+    let fitSum = 0
+    let fitCount = 0
+    for (const r of apps) {
+      const fit = r[7]
+      if (typeof fit === 'number' && Number.isFinite(fit)) {
+        fitSum += fit
+        fitCount += 1
+      }
+    }
+    const avg_fit_score = fitCount > 0 ? Math.round(fitSum / fitCount) : null
+
     let totalInput = 0
     let totalCacheRead = 0
-    let totalCostLast30 = 0
     let scoreCallsLast30 = 0
     const cutoff = Date.now() - 30 * 24 * 3600 * 1000
 
     for (const row of activity) {
-      const [timestamp, action, , inputTok, cacheReadTok, , , costUsd] = row as [
+      const [timestamp, action, , inputTok, cacheReadTok] = row as [
         string | number,
         string,
         string,
         number,
         number,
-        number,
-        number,
-        number,
-        string,
       ]
-      const input = numOr0(inputTok)
-      const cacheRead = numOr0(cacheReadTok)
-      totalInput += input
-      totalCacheRead += cacheRead
+      totalInput += numOr0(inputTok)
+      totalCacheRead += numOr0(cacheReadTok)
 
       const ts = parseTs(timestamp)
       if (ts != null && ts >= cutoff) {
-        totalCostLast30 += numOr0(costUsd)
         if (typeof action === 'string' && action.toLowerCase().startsWith('score')) {
           scoreCallsLast30 += 1
         }
@@ -104,8 +105,7 @@ export async function getDashboardStats(): Promise<DashboardStats> {
     return {
       applications_tracked,
       cache_hit_rate_pct,
-      monthly_spend_usd_str: totalCostLast30.toFixed(2),
-      avg_score_latency_seconds: 0,
+      avg_fit_score,
       score_calls_last_30d: scoreCallsLast30,
       last_refresh: new Date().toISOString().replace('T', ' ').slice(0, 16) + ' UTC',
       source: 'sheet',
